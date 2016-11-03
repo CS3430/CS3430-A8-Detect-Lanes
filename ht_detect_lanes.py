@@ -7,13 +7,14 @@ import os
 import fnmatch
 
 def line_deg_angle(x1, y1, x2, y2):
-    pass
+    delta_y = y2-y1
+    delta_x = x2-x1
+    return math.atan2(delta_y, delta_x)*180/math.pi
 
 ## >>> line_deg_angle(1, 1, 5, 5)
 ##45.0
 ##>>> line_deg_angle(0, 5, 5, 0)
 ##-45.0
-
 def unit_test_01(x1, y1, x2, y2):
     print line_deg_angle(x1, y1, x2, y2)
 
@@ -50,13 +51,13 @@ def display_ht_lines_and_angles(lines):
         print str(e)
 
 def is_angle_in_range(a, ang_lower, ang_upper):
-    pass
+    return a in range(ang_lower, ang_upper)
 
-def is_left_lane_line(x1, y1, x2, y2, ang_lower, ang_upper):
-    pass
+def is_left_lane_line(x1, y1, x2, y2, ang_lower=-60, ang_upper=-30):
+    return is_angle_in_range(line_deg_angle(x1, y1, x2, y2), ang_lower, ang_upper)
 
-def is_right_lane_line(x1, y1, x2, y2, ang_lower, ang_upper):
-    pass
+def is_right_lane_line(x1, y1, x2, y2, ang_lower=30, ang_upper=60):
+    return is_angle_in_range(line_deg_angle(x1, y1, x2, y2), ang_lower, ang_upper)
 
 def display_ht_lanes_in_image(image_path, rho_accuracy, theta_accuracy, num_votes, min_len, max_gap):
     image = cv2.imread(image_path) ## read the image
@@ -75,11 +76,26 @@ def unit_test_02(image_path,  num_votes, min_len, max_gap):
     display_ht_lanes_in_image(image_path, 1, numpy.pi/180, num_votes, min_len, max_gap)
 
 def filter_left_lane_lines(lines, ang_lower=-60, ang_upper=-30):
-    pass
+    if lines is None:
+        return []
+    ll_lines = []
+    for line in lines:
+        x1,y1,x2,y2 = line[0]
+        if is_left_lane_line(x1,y1,x2,y2, ang_lower, ang_upper):
+            ll_lines.append(line)
+    return ll_lines
+    # return [line for line in lines if is_left_lane_line(line[0][0], line[0][1], line[0][2], line[0][3], ang_lower, ang_upper)]
 
 def filter_right_lane_lines(lines, ang_lower=30, ang_upper=60):
-    pass
-
+    if lines is None:
+        return []
+    rl_lines = []
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        if is_right_lane_line(x1, y1, x2, y2, ang_lower, ang_upper):
+            rl_lines.append(line)
+    return rl_lines
+    # return [line for line in lines if is_right_lane_line(line[0][0], line[0][1], line[0][2], line[0][3], ang_lower, ang_upper)]
 
 ## most common value for rho_accuracy is 1
 ## most common value for theta_accuracy is numpy.pi/180.
@@ -106,6 +122,7 @@ def detect_ht_lanes_in_image(image_path, rho_accuracy, theta_accuracy, num_votes
     gray  = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) ## grayscale
     edges = cv2.Canny(gray, 50, 150, apertureSize=3) ## detect edges
     lines = cv2.HoughLinesP(edges, rho_accuracy, theta_accuracy, num_votes, min_len, max_gap) ## detect hough lines
+    # print "lines: ", lines
     ll_lines = filter_left_lane_lines(lines)
     rl_lines = filter_right_lane_lines(lines)
     draw_lines_in_image(image, ll_lines, (255, 0, 0), 2)
@@ -119,7 +136,14 @@ def unit_test_03(image_path, rho_accuracy, theta_accuracy, num_votes, min_len, m
     print 'number of right lanes:', rl
     
 def find_ll_rl_lanes_in_images_in_dir(imgdir, filepat, rho_acc, th_acc, num_votes, min_len, max_gap):
-    pass
+    files = generate_file_names(filepat, imgdir)
+    for f in files:
+        yield (f, detect_ht_lanes_in_image(f, rho_acc, th_acc, num_votes, min_len, max_gap))
+
+def generate_file_names(fnpat, rootdir):
+  for path, dirlist, filelist in os.walk(rootdir):
+    for file_name in fnmatch.filter(filelist, fnpat):
+        yield os.path.join(path, file_name)
 
 def unit_test_04(imgdir, filepat, rho_acc, th_acc, num_votes, min_len, max_gap):
     for fp, ll_rl in find_ll_rl_lanes_in_images_in_dir(imgdir, filepat, 1, numpy.pi/180,
@@ -129,12 +153,16 @@ def unit_test_04(imgdir, filepat, rho_acc, th_acc, num_votes, min_len, max_gap):
 ## This is the new __main__
 if __name__ == '__main__':
     #unit_test_01(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
-    #plot_ht_lanes_in_image(sys.argv[1], 1, numpy.pi/180, int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
-    #unit_test_02(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
-    #unit_test_03(sys.argv[1], 1, numpy.pi/180, int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
-    #unit_test_04(sys.argv[1], sys.argv[2], 1, numpy.pi/180, int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
+    filename = "/road_images/16_07_02_08_24_59_orig.png"
+    num_votes = 1
+    min_len = 50
+    max_gap = 10
+    plot_ht_lanes_in_image(filename, 1, numpy.pi/180, num_votes, min_len, max_gap)
+    unit_test_02(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
+    unit_test_03(filename, 1, numpy.pi/180, num_votes, min_len, max_gap)
+    unit_test_04("road_images", "*_orig.png", 1, numpy.pi/180, num_votes, min_len, max_gap)
+    # unit_test_04(sys.argv[1], sys.argv[2], 1, numpy.pi/180, int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
     pass
-
 
 
 
