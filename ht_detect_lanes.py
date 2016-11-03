@@ -165,8 +165,9 @@ if __name__ == '__main__':
     # print "---unit_test_03---"
     # unit_test_03(filename, 1, numpy.pi/180, num_votes, min_len, max_gap)
     print "---unit_test_04---"
-    unit_test_04("road_images", "*_orig.png", 1, numpy.pi/180, num_votes, min_len, max_gap)
-    # unit_test_04(sys.argv[1], sys.argv[2], 1, numpy.pi/180, int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
+    # unit_test_04("road_images", "*_orig.png", 1, numpy.pi/180, num_votes, min_len, max_gap)
+    # 50 150 10
+    unit_test_04(sys.argv[1], sys.argv[2], 1, numpy.pi/180, int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
     pass
 
 
