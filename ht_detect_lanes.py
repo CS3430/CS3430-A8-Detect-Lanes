@@ -1,3 +1,17 @@
+#########################
+# Misty Jenkins
+# A01489147
+# ang_upper: default
+# ang_lower: default
+# num_votes: 40
+# min_len: 150
+# max_gap: 10
+# i don't think there are universally optimal values for these parameters because even
+# in this assignment, in order for me to find more right lane lines I had to give less
+# strict values which worked in the city images but then in the residential areas with
+# all the trees I kept finding branches
+#########################
+
 import argparse
 import cv2
 import numpy
@@ -7,9 +21,7 @@ import os
 import fnmatch
 
 def line_deg_angle(x1, y1, x2, y2):
-    delta_y = y2-y1
-    delta_x = x2-x1
-    return math.atan2(delta_y, delta_x)*180/math.pi
+    return math.atan2(y2-y1, x2-x1)*180/math.pi
 
 ## >>> line_deg_angle(1, 1, 5, 5)
 ##45.0
@@ -69,28 +81,16 @@ def display_ht_lanes_in_image(image_path, rho_accuracy, theta_accuracy, num_vote
     cv2.imshow('Lines in Image', image)
     cv2.waitKey(0)
 
-def filter_left_lane_lines(lines, ang_lower=-60, ang_upper=-20):
+def filter_left_lane_lines(lines, ang_lower=-60, ang_upper=-30):
     if lines is None:
         return []
-    ll_lines = []
-    for line in lines:
-        x1,y1,x2,y2 = line[0]
-        if is_left_lane_line(x1,y1,x2,y2, ang_lower, ang_upper):
-            ll_lines.append(line)
-    return ll_lines
-    # return [line for line in lines if is_left_lane_line(line[0][0], line[0][1], line[0][2], line[0][3], ang_lower, ang_upper)]
-
-def filter_right_lane_lines(lines, ang_lower=20, ang_upper=60):
+    return [line for line in lines if is_left_lane_line(*line[0], ang_lower=ang_lower, ang_upper=ang_upper)]
+    
+def filter_right_lane_lines(lines, ang_lower=30, ang_upper=60):
     if lines is None:
         return []
-    rl_lines = []
-    for line in lines:
-        x1, y1, x2, y2 = line[0]
-        if is_right_lane_line(x1, y1, x2, y2, ang_lower, ang_upper):
-            rl_lines.append(line)
-    return rl_lines
-    # return [line for line in lines if is_right_lane_line(line[0][0], line[0][1], line[0][2], line[0][3], ang_lower, ang_upper)]
-
+    return [line for line in lines if is_right_lane_line(*line[0], ang_lower=ang_lower, ang_upper=ang_upper)]
+    
 ## most common value for rho_accuracy is 1
 ## most common value for theta_accuracy is numpy.pi/180.
 ## typo with display_line_angles is fixed.
@@ -153,23 +153,17 @@ def unit_test_04(imgdir, filepat, rho_acc, th_acc, num_votes, min_len, max_gap):
     
 ## This is the new __main__
 if __name__ == '__main__':
-    #unit_test_01(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
-    filename = "road_images/16_07_02_08_24_59_orig.png"
-    num_votes = 25
-    min_len = 200
-    max_gap = 5
-    # print "---plot_ht_lanes_in_image:", filename, " ---"
-    # plot_ht_lanes_in_image(filename, 1, numpy.pi/180, num_votes, min_len, max_gap)
+    # print "---unit_test_01---"
+    # unit_test_01(int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
+    # print "---plot_ht_lanes_in_image:",sys.argv[1],"---"
+    # plot_ht_lanes_in_image(sys.argv[1], 1, numpy.pi/180, int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
     # print "---unit_test_02---"
-    # unit_test_02(filename, num_votes, min_len, max_gap)
+    # unit_test_02(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
     # print "---unit_test_03---"
-    # unit_test_03(filename, 1, numpy.pi/180, num_votes, min_len, max_gap)
+    # unit_test_03(sys.argv[1], 1, numpy.pi/180, int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
     print "---unit_test_04---"
-    # unit_test_04("road_images", "*_orig.png", 1, numpy.pi/180, num_votes, min_len, max_gap)
-    # 50 150 10
     unit_test_04(sys.argv[1], sys.argv[2], 1, numpy.pi/180, int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
     pass
-
 
 
 
